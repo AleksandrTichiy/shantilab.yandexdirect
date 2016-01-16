@@ -79,6 +79,33 @@ class AccountsTable extends Entity\Datamanager
             new Entity\DatetimeField('TOKEN_FINAL_DATE', [
                 'required' => true,
             ]),
+
+            new Entity\StringField('MASTER_TOKEN', [
+                'save_data_modification' => function () {
+                    return [
+                        function ($value) {
+                            $secretKey = self::SECRET_KEY;
+                            $value = Jwt::encode($value, $alg = new HS256Algorithm($secretKey));
+                            return $value;
+                        }
+                    ];
+                },
+                'fetch_data_modification' => function () {
+                    return [
+                        function ($value) {
+                            if (!$value) return;
+
+                            $secretKey = self::SECRET_KEY;
+                            $decoded = Jwt::decode($value, ['algorithm' =>  new HS256Algorithm($secretKey)]);
+                            return $decoded['data'];
+                        }
+                    ];
+                }
+            ]),
+
+            new Entity\IntegerField('FINANCE_NUM', [
+                'default_value' => 0
+            ]),
         ];
     }
 
@@ -88,7 +115,7 @@ class AccountsTable extends Entity\Datamanager
         $data = $event->getParameter('fields');
         $fields = [];
 
-        if (isset($data['TOKEN_EXPIRES_IN'])){
+        if (isset($data['TOKEN_EXPIRES_IN']) && !self::tokenAlreadyExists($data)){
             $expires = intval($data['TOKEN_EXPIRES_IN']);
             $dateTime = new Type\DateTime();
             $dateTime->add('+ ' . $expires . ' sec');
@@ -114,6 +141,21 @@ class AccountsTable extends Entity\Datamanager
         }
 
         return $result;
+    }
+
+    public static function tokenAlreadyExists($data){
+        if (isset($data['USER_ID'], $data['LOGIN'], $data['ACCESS_TOKEN'])){
+            $row = self::getRow([
+                'filter' => [
+                    'USER_ID' => $data['USER_ID'],
+                    'LOGIN' => $data['LOGIN'],
+                    'ACCESS_TOKEN' => $data['ACCESS_TOKEN']
+                ]
+            ]);
+
+            if ($row) return true;
+        }
+        return false;
     }
 
 }

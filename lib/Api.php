@@ -51,6 +51,11 @@ class Api
             'token' => $this->account->getToken()
         ];
 
+        if ($this->isFinancialOperation($method)){
+            $params['finance_token']  = $this->account->getFinancialToken($method);
+            $params['operation_num']  = $this->account->getFinancialNum() + 1;
+        }
+
         $params =  Json::encode($params);
         $resultResponse = $this->sender->exec($params);
         $result = $resultResponse->getFields();
@@ -62,6 +67,10 @@ class Api
                 //обработка ошибок
         }
 
+        if ($this->isFinancialOperation($method) && !$result['error_code']){
+            $this->account->incrementFinanceOperation();
+        }
+
         return $result;
     }
 
@@ -71,4 +80,11 @@ class Api
         return $this->apiQuery(ucfirst($method), $params);
     }
 
+    private function isFinancialOperation($operation)
+    {
+        if (in_array($operation, $this->config['financialOperations']))
+            return true;
+
+        return false;
+    }
 }
