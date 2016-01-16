@@ -3,20 +3,20 @@
 namespace Shantilab\YandexDirect;
 
 use \Bitrix\Main\Web\Json;
+use Shantilab\YandexDirect\Account\AccountInterface;
 
 class Api
 {
     private $config;
     private $sender;
     private $apiUrl;
+    private $account;
 
-    public function __construct($params = [])
+    public function __construct(AccountInterface $account)
     {
+        $this->account = $account;
+
         $this->setDefaultParams();
-
-        if ($params)
-            $this->setParams($params);
-
         $this->init();
     }
 
@@ -48,7 +48,7 @@ class Api
             'param' => $params,
             'locale' => ($this->config['locale']) ? $this->config['locale'] : 'ru',
             'application_id' => $this->config['applicationID'],
-            'token' => $this->config['token']
+            'token' => $this->account->getToken()
         ];
 
         $params =  Json::encode($params);

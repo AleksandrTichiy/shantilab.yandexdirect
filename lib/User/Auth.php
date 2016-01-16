@@ -5,7 +5,7 @@ namespace Shantilab\YandexDirect\User;
 use Shantilab\YandexDirect\Config;
 use Shantilab\YandexDirect\Sender;
 
-class Auth
+class Auth implements \ArrayAccess
 {
     private $config;
     private $authorizeLink;
@@ -92,4 +92,27 @@ class Auth
         }
     }
 
+    public function offsetExists($offset)
+    {
+        return isset($this->config[$offset]);
+    }
+
+    public function offsetGet($offset)
+    {
+        return isset($this->config[$offset]) ? $this->config[$offset] : null;
+    }
+
+    public function offsetSet($offset, $value)
+    {
+        if (is_null($offset)) {
+            $this->config[] = $value;
+        } else {
+            $this->config[$offset] = $value;
+        }
+    }
+
+    public function offsetUnset($offset)
+    {
+        unset($this->config[$offset]);
+    }
 }

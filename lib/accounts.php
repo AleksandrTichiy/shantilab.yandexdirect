@@ -7,13 +7,13 @@ use Bitrix\Main\Type;
 use Jwt\Jwt;
 use Jwt\Algorithm\HS256Algorithm;
 
-class UserTable extends Entity\Datamanager
+class AccountsTable extends Entity\Datamanager
 {
     const SECRET_KEY = 'some-secret-key-for-application';
 
     public static function getTableName()
     {
-        return 'shantilab_yandexdirect_users';
+        return 'shantilab_yandexdirect_accounts';
     }
 
     public static function getConnectionName()
@@ -86,14 +86,18 @@ class UserTable extends Entity\Datamanager
     {
         $result = new Entity\EventResult;
         $data = $event->getParameter('fields');
+        $fields = [];
 
         if (isset($data['TOKEN_EXPIRES_IN'])){
+            $expires = intval($data['TOKEN_EXPIRES_IN']);
             $dateTime = new Type\DateTime();
-            $dateTime->add('+ ' . $data['TOKEN_EXPIRES_IN']. ' sec');
-            //$result->modifyFields(array('TOKEN_FINAL_DATE' => $dateTime));
+            $dateTime->add('+ ' . $expires . ' sec');
+            $fields['TOKEN_FINAL_DATE'] = $dateTime;
         }
 
-        $result->modifyFields(['UPDATE_DATE' => new Type\DateTime]);
+        $fields['UPDATE_DATE'] = new Type\DateTime;
+
+        $result->modifyFields($fields);
 
         return $result;
     }
@@ -104,8 +108,8 @@ class UserTable extends Entity\Datamanager
         $data = $event->getParameter('fields');
 
         if (isset($data['TOKEN_EXPIRES_IN'])){
-            $dateTime = new Type\DateTime('+ ' . $data['TOKEN_EXPIRES_IN']. ' sec');
-            //$dateTime->add('+ ' . $data['TOKEN_EXPIRES_IN']. ' sec');
+            $dateTime = new Type\DateTime();
+            $dateTime->add('+ ' . $data['TOKEN_EXPIRES_IN'] . ' sec');
             $result->modifyFields(['TOKEN_FINAL_DATE' => $dateTime]);
         }
 

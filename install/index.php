@@ -93,18 +93,18 @@ class shantilab_yandexdirect extends CModule
     public function installDB(){
         Loader::includeModule($this->MODULE_ID);
 
-        if (!Application::getConnection(\Shantilab\YandexDirect\UserTable::getConnectionName())->isTableExists(
-            Base::getInstance('\Shantilab\YandexDirect\UserTable')->getDBTableName()
+        if (!Application::getConnection(\Shantilab\YandexDirect\AccountsTable::getConnectionName())->isTableExists(
+            Base::getInstance('\Shantilab\YandexDirect\AccountsTable')->getDBTableName()
             )
         )
-            Base::getInstance('\Shantilab\YandexDirect\UserTable')->createDbTable();
+            Base::getInstance('\Shantilab\YandexDirect\AccountsTable')->createDbTable();
     }
 
     public function uninstallDB()
     {
         Loader::includeModule($this->MODULE_ID);
-        Application::getConnection(\Shantilab\YandexDirect\UserTable::getConnectionName())->
-            queryExecute('drop table if exists ' . Base::getInstance('\Shantilab\YandexDirect\UserTable')->getDBTableName());
+        Application::getConnection(\Shantilab\YandexDirect\AccountsTable::getConnectionName())->
+            queryExecute('drop table if exists ' . Base::getInstance('\Shantilab\YandexDirect\AccountsTable')->getDBTableName());
 
         Option::delete($this->MODULE_ID);
     }

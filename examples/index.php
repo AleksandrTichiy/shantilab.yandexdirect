@@ -5,34 +5,47 @@ Loader::includeModule('shantilab.yandexdirect');
 
 // 2. Шаг указание псевдонимов
 use Shantilab\YandexDirect\User\Auth;
-use Shantilab\YandexDirect\Api;
-use Shantilab\YandexDirect\User\AccountsCollection as AcColl;
+use Shantilab\YandexDirect\Account\Account;
+use Shantilab\YandexDirect\Account\AccountCollection;
 
 // 3. Шаг Авторизация (а) получение временного токена
 $yAuth = new Auth();
 echo '<a href="' . $yAuth->getAuthorizeUrl() . '">Получить токен</a>';
 
 //4. Шаг обработка временного токена и получение постоянного токена
-if (isset($_REQUEST['code'])){
-    $code = $_REQUEST['code'];
-    $yAuth->setParams(['code' => $code]);
-    $tokenInfo = $yAuth->getToken();
+$yAuth = new Auth();
 
-    //Сохранение в базу пользователя с логином и токеном
+// получение токена по коду
+if ($_REQUEST['code']){
+    $yAuth['code'] = intval($_REQUEST['code']);
+    $tokenInfo = $yAuth->getToken();
     if ($tokenInfo['access_token']){
         $authInfo = Auth::getInfo($tokenInfo['access_token']);
-        $accounts = new AcColl();
-        $accounts->saveTokenInfo($tokenInfo + $authInfo); // сам обновит если нужно
+        //Сохранение в базу (или обновление)
+        (new Account([
+            'USER_ID' => $USER->GetId(),
+            'LOGIN' => $authInfo['login'],
+            'ACCESS_TOKEN' => $tokenInfo['access_token'],
+            'TOKEN_EXPIRES_IN' => $tokenInfo['expires_in'],
+            'TOKEN_TYPE' => $tokenInfo['token_type'],
+        ]))->save();
 
+        //Редирект, чтобы нельзя было обновить страницу
         LocalRedirect('/test/');
     }
 }
 
 //5. Шаг работа с API
-$accounts = new AcColl();
-$data = current($accounts->getTokenInfo($login = 'dir.direct123', $onlyActual = true));
+$account = new Account();
+$account->getBy(['LOGIN' => 'dir.direct123']); // по умолчанию подставляется текущий USER_ID и происходит проверка на актуальный токен
 
-if (isset($data['ACCESS_TOKEN'])){ // здесь имеется в виду что токен получен из базы и пройдена проверка на его актуальность
-    $yApi = new Api(['token' => $data['ACCESS_TOKEN']]);
-    $result = $yApi->GetClientInfo(['dir.direct123']);
+if (isset($account['ACCESS_TOKEN'])){ // здесь имеется в виду что токен получен из базы и пройдена проверка на его актуальность
+    //работа с API
+    $result = $account->GetClientInfo(['dir.direct123']);
+}
+
+//6. Работа с коллекцией аккаунтов текущего пользователя
+$accountCollection = new AccountCollection();
+foreach($accountCollection as $collection){
+    $collection->GetClientInfo(['dir.direct123']);
 }
