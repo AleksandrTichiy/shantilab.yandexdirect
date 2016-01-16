@@ -39,7 +39,7 @@ if ($_REQUEST['code']){
 $account = new Account();
 $account->getBy(['LOGIN' => 'dir.direct123']); // по умолчанию подставляется текущий USER_ID и происходит проверка на актуальный токен
 
-if (isset($account['ACCESS_TOKEN'])){ // здесь имеется в виду что токен получен из базы и пройдена проверка на его актуальность
+if (isset($account->getToken())){ // здесь имеется в виду что токен получен из базы и пройдена проверка на его актуальность
     //работа с API
     $result = $account->GetClientInfo(['dir.direct123']);
 }
