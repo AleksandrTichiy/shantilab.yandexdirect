@@ -1,0 +1,10 @@
+applicationID: '6c1bcbda85d741c2be06a0706728f534'
+applicationPassword: '6921b4539d6e4ed89a5c2e65d214fd80'
+testMode: true
+locale: 'ru'
+responseType: 'code'
+url:
+  auth: 'https://oauth.yandex.ru/authorize'
+  token: 'https://oauth.yandex.ru/token'
+  api: 'https://api.direct.yandex.ru/v4/json/'
+  testApi: 'https://api-sandbox.direct.yandex.ru/json-api/v4/'
