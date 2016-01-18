@@ -41,6 +41,7 @@ if ($_REQUEST['code']){
     $tokenInfo = $yAuth->getToken();
     if ($tokenInfo['access_token']){
         $authInfo = Auth::getInfo($tokenInfo['access_token']);
+        
         //Сохранение в базу (или обновление, если такой аккаунт уже есть в базе)
         (new Account([
             'USER_ID' => $USER->GetId(),
@@ -51,7 +52,7 @@ if ($_REQUEST['code']){
         ]))->save();
 
         //Редирект
-        LocalRedirect('/test/');
+        LocalRedirect('/');
     }
 }
 ```
