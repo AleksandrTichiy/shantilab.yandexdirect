@@ -38,11 +38,17 @@ $yAuth = new Auth();
 
 // получение постоянного токена по временному
 if ($_REQUEST['code']){
-    $yAuth['code'] = intval($_REQUEST['code']);
+$yAuth['code'] = intval($_REQUEST['code']);
+
     $tokenInfo = $yAuth->getToken();
-    if ($tokenInfo['access_token']){
+    $errors = ($tokenInfo->getErrors()) ?: [];
+
+    if (!$errors && $tokenInfo['access_token']){
         $authInfo = Auth::getInfo($tokenInfo['access_token']);
-        
+        $errors = array_merge($errors, ($authInfo->getErrors()) ?: []);
+    }
+
+    if (!$errors){
         //Сохранение в базу (или обновление, если такой аккаунт уже есть в базе)
         (new Account([
             'USER_ID' => $USER->GetId(),
@@ -51,9 +57,13 @@ if ($_REQUEST['code']){
             'TOKEN_EXPIRES_IN' => $tokenInfo['expires_in'],
             'TOKEN_TYPE' => $tokenInfo['token_type'],
         ]))->save();
-
+        
         //Редирект
         LocalRedirect('/');
+    }else{
+        foreach($errors as $error){
+            // Обработка ошибок
+        }
     }
 }
 ```
@@ -66,9 +76,13 @@ $account = new Account();
 $account->getBy(['LOGIN' => 'dir.direct123']);
 
 /* здесь имеется в виду что токен получен из базы и пройдена проверка на его актуальность*/
-if ($account->getToken()){
+if ($account->getToken($checkActual = true)){
     /*работа с API. Теперь от экземпляра класса Account можно вызывать любые методы Яндекс Директа*/
-    $result = $account->GetClientInfo(['dir.direct123']);
+    $resultResponse = $account->GetClientInfo(['dir.direct123']);
+    foreach($resultResponse->getErrors() as $error){
+        if ($error['code'] == 53) //токен устарел
+            echo '<a href="' . $yAuth->getAuthorizeUrl() . '">Получить токен</a>';
+    }
 }
 ```
 
@@ -91,7 +105,7 @@ $account['MASTER_TOKEN'] = 'sdfasdfadsg4resfsrhdf';
 $account->save();
 
 /*Или использовать сразу*/
-$result = $account->GetCreditLimits();
+$resultResponse = $account->GetCreditLimits();
 ```
 Список финансовых операций (операций, для которых нужно использовать мастер-токен) указывается в `settings.yml`.
 

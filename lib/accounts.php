@@ -6,19 +6,33 @@ use Bitrix\Main\Entity;
 use Bitrix\Main\Type;
 use Jwt\Jwt;
 use Jwt\Algorithm\HS256Algorithm;
+use Shantilab\YandexDirect\Exceptions\SettingParameterNullException;
 
+/**
+ * Class AccountsTable
+ * @package Shantilab\YandexDirect
+ */
 class AccountsTable extends Entity\Datamanager
 {
+    /**
+     * @return string
+     */
     public static function getTableName()
     {
         return 'shantilab_yandexdirect_accounts';
     }
 
+    /**
+     * @return string
+     */
     public static function getConnectionName()
     {
         return 'default';
     }
 
+    /**
+     * @return array
+     */
     public static function getMap()
     {
         return [
@@ -51,18 +65,14 @@ class AccountsTable extends Entity\Datamanager
                 'save_data_modification' => function () {
                     return [
                         function ($value) {
-                            $secretKey = (new Config())->getConfig('secretKey');
-                            $value = Jwt::encode($value, $alg = new HS256Algorithm($secretKey));
-                            return $value;
+                            return self::encodeVal($value);
                         }
                     ];
                 },
                 'fetch_data_modification' => function () {
                     return [
                         function ($value) {
-                            $secretKey = (new Config())->getConfig('secretKey');
-                            $decoded = Jwt::decode($value, ['algorithm' =>  new HS256Algorithm($secretKey)]);
-                            return $decoded['data'];
+                            return self::decodeVal($value);
                         }
                     ];
                 }
@@ -82,20 +92,14 @@ class AccountsTable extends Entity\Datamanager
                 'save_data_modification' => function () {
                     return [
                         function ($value) {
-                            $secretKey = (new Config())->getConfig('secretKey');
-                            $value = Jwt::encode($value, $alg = new HS256Algorithm($secretKey));
-                            return $value;
+                            return self::encodeVal($value);
                         }
                     ];
                 },
                 'fetch_data_modification' => function () {
                     return [
                         function ($value) {
-                            if (!$value) return;
-
-                            $secretKey = (new Config())->getConfig('secretKey');
-                            $decoded = Jwt::decode($value, ['algorithm' =>  new HS256Algorithm($secretKey)]);
-                            return $decoded['data'];
+                            return self::decodeVal($value);
                         }
                     ];
                 }
@@ -107,6 +111,10 @@ class AccountsTable extends Entity\Datamanager
         ];
     }
 
+    /**
+     * @param Entity\Event $event
+     * @return Entity\EventResult
+     */
     public static function onBeforeUpdate(Entity\Event $event)
     {
         $result = new Entity\EventResult;
@@ -127,6 +135,10 @@ class AccountsTable extends Entity\Datamanager
         return $result;
     }
 
+    /**
+     * @param Entity\Event $event
+     * @return Entity\EventResult
+     */
     public static function onBeforeAdd(Entity\Event $event)
     {
         $result = new Entity\EventResult;
@@ -141,6 +153,10 @@ class AccountsTable extends Entity\Datamanager
         return $result;
     }
 
+    /**
+     * @param $data
+     * @return bool
+     */
     public static function tokenAlreadyExists($data){
         if (isset($data['USER_ID'], $data['LOGIN'], $data['ACCESS_TOKEN'])){
             $row = self::getRow([
@@ -153,7 +169,49 @@ class AccountsTable extends Entity\Datamanager
 
             if ($row) return true;
         }
+
         return false;
     }
 
+    /**
+     * @param $value
+     * @return string
+     * @throws SettingParameterNullException
+     */
+    public static function encodeVal($value)
+    {
+        $value = Jwt::encode($value, ['algorithm' =>  new HS256Algorithm(self::getSecretKey())]);
+        return $value;
+    }
+
+    /**
+     * @param $value
+     * @return null
+     * @throws SettingParameterNullException
+     * @throws \Jwt\Exception\SignatureInvalidException
+     */
+    public static function decodeVal($value)
+    {
+        if (!$value) return null;
+
+        $decoded = Jwt::decode($value, ['algorithm' =>  new HS256Algorithm(self::getSecretKey())]);
+        return $decoded['data'];
+    }
+
+    /**
+     * @return array
+     * @throws SettingParameterNullException
+     * @throws \Bitrix\Main\ArgumentNullException
+     * @throws \Bitrix\Main\IO\FileNotFoundException
+     * @throws \Bitrix\Main\IO\InvalidPathException
+     */
+    public static function getSecretKey()
+    {
+        $secretKey = (new Config())->getConfig('secretKey');
+
+        if (!$secretKey)
+            throw new SettingParameterNullException('secretKey');
+
+        return $secretKey;
+    }
 }

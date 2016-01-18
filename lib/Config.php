@@ -1,7 +1,11 @@
 <?php
 namespace Shantilab\YandexDirect;
 
-use \Symfony\Component\Yaml\Yaml;
+use Bitrix\Main\IO\File;
+use Bitrix\Main\IO\FileNotFoundException;
+use Bitrix\Main\IO\InvalidPathException;
+use Bitrix\Main\ArgumentNullException;
+use Symfony\Component\Yaml\Yaml;
 
 /**
  * Class Config
@@ -19,7 +23,7 @@ class Config
      */
     public function __construct()
     {
-        $this->file = __DIR__ . '/../settings.yml';
+        $this->file = new File( __DIR__ . '/../settings.yml');
     }
 
     /**
@@ -28,7 +32,14 @@ class Config
      */
     public function getConfig($type = null)
     {
-        $params = Yaml::parse(file_get_contents($this->file));
+        if (!$this->file)
+            throw new ArgumentNullException($this->file->getPath());
+        if (!$this->file->isFile())
+            throw new InvalidPathException($this->file->getPath());
+        if (!$this->file->isExists())
+            throw new FileNotFoundException($this->file->getPath());
+
+        $params = Yaml::parse($this->file->getContents());
 
         if ($type){
             $ar = explode('\\', $type);

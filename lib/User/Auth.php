@@ -4,12 +4,27 @@ namespace Shantilab\YandexDirect\User;
 
 use Shantilab\YandexDirect\Config;
 use Shantilab\YandexDirect\Sender;
+use Shantilab\YandexDirect\Exceptions\SettingParameterNullException;
 
+/**
+ * Class Auth
+ * @package Shantilab\YandexDirect\User
+ */
 class Auth implements \ArrayAccess
 {
+    /**
+     * @var
+     */
     private $config;
+    /**
+     * @var
+     */
     private $authorizeLink;
 
+    /**
+     * Auth constructor.
+     * @param array $params
+     */
     public function __construct($params = [])
     {
         $this->setDefaultParams();
@@ -20,12 +35,21 @@ class Auth implements \ArrayAccess
         $this->init();
     }
 
+    /**
+     * @throws \Bitrix\Main\ArgumentNullException
+     * @throws \Bitrix\Main\IO\FileNotFoundException
+     * @throws \Bitrix\Main\IO\InvalidPathException
+     */
     private function setDefaultParams()
     {
         $conf = new Config();
         $this->config = $conf->getConfig();
     }
 
+    /**
+     * @param array $params
+     * @return $this
+     */
     public function setParams($params = [])
     {
         $this->config = $params + $this->config;
@@ -34,13 +58,24 @@ class Auth implements \ArrayAccess
         return $this;
     }
 
+    /**
+     * @throws SettingParameterNullException
+     */
     private function init()
     {
         $this->setAuthorizeUrl();
     }
 
+    /**
+     * @throws SettingParameterNullException
+     */
     private function setAuthorizeUrl()
     {
+        if (!$this->config['responseType'])
+            throw new SettingParameterNullException('responseType');
+        if (!$this->config['applicationID'])
+            throw new SettingParameterNullException('applicationID');
+
         $params = [
             'response_type' => $this->config['responseType'],
             'client_id' => $this->config['applicationID'],
@@ -52,11 +87,20 @@ class Auth implements \ArrayAccess
         $this->authorizeLink = $this->config['url']['auth'] . '?' . http_build_query($params);
     }
 
+    /**
+     * @param string $state
+     * @return string
+     */
     public function getAuthorizeUrl($state = '')
     {
         return $state ? $this->authorizeLink . '&state=' . $state : $this->authorizeLink;
     }
 
+    /**
+     * @param $token
+     * @return \Shantilab\YandexDirect\Response
+     * @throws \Shantilab\YandexDirect\Exceptions\InvalidSendExcpetion
+     */
     public static function getInfo($token)
     {
         if ($token){
@@ -66,12 +110,24 @@ class Auth implements \ArrayAccess
                 'oauth_token' => $token
             ]);
 
-            return $loginInfoResponse->getFields();
+            return $loginInfoResponse;
         }
     }
 
+    /**
+     * @return \Shantilab\YandexDirect\Response
+     * @throws SettingParameterNullException
+     * @throws \Shantilab\YandexDirect\Exceptions\InvalidSendExcpetion
+     */
     public function getToken()
     {
+        if (!$this->config['applicationID'])
+            throw new SettingParameterNullException('applicationID');
+        if (!$this->config['applicationPassword'])
+            throw new SettingParameterNullException('applicationPassword');
+        if (!$this->config['code'])
+            throw new SettingParameterNullException('code');
+
         $data = [
             'grant_type' => 'authorization_code',
             'code' => $this->config['code'],
@@ -81,27 +137,31 @@ class Auth implements \ArrayAccess
 
         $resultResponse = (new Sender($this->config['url']['token']))->exec($data);
 
-        $result = $resultResponse->getFields();
-
-        if (empty($result['error'])) {
-            if ($result['access_token']){
-                return $result;
-            }
-        } else {
-            // выброс ошибок исключений
-        }
+        return $resultResponse;
     }
 
+    /**
+     * @param mixed $offset
+     * @return bool
+     */
     public function offsetExists($offset)
     {
         return isset($this->config[$offset]);
     }
 
+    /**
+     * @param mixed $offset
+     * @return null
+     */
     public function offsetGet($offset)
     {
         return isset($this->config[$offset]) ? $this->config[$offset] : null;
     }
 
+    /**
+     * @param mixed $offset
+     * @param mixed $value
+     */
     public function offsetSet($offset, $value)
     {
         if (is_null($offset)) {
@@ -111,6 +171,9 @@ class Auth implements \ArrayAccess
         }
     }
 
+    /**
+     * @param mixed $offset
+     */
     public function offsetUnset($offset)
     {
         unset($this->config[$offset]);

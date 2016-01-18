@@ -15,6 +15,7 @@ interface AccountInterface
     public function __construct($fields);
 
     /**
+     * @param bool $checkActual
      * @return mixed
      */
     public function getToken($checkActual = false);

@@ -2,9 +2,21 @@
 
 namespace Shantilab\YandexDirect;
 
+use Shantilab\YandexDirect\Exceptions\InvalidSendExcpetion;
+
+/**
+ * Class Sender
+ * @package Shantilab\YandexDirect
+ */
 class Sender
 {
+    /**
+     * @var resource
+     */
     private $curlHandler;
+    /**
+     * @var array
+     */
     private $curlOptions = [
         CURLOPT_RETURNTRANSFER => true,
         CURLOPT_FOLLOWLOCATION => true,
@@ -16,6 +28,10 @@ class Sender
         CURLOPT_POST => true,
     ];
 
+    /**
+     * Sender constructor.
+     * @param $url
+     */
     public function __construct($url)
     {
         $this->curlHandler = curl_init();
@@ -25,13 +41,17 @@ class Sender
         return $this;
     }
 
+    /**
+     * @param array $data
+     * @return Response
+     * @throws InvalidSendExcpetion
+     */
     public function exec($data = [])
     {
         curl_setopt($this->curlHandler, CURLOPT_POSTFIELDS, $data);
         $result = curl_exec($this->curlHandler);
         if (curl_errno($this->curlHandler))
-            throw new \Exception(curl_error($this->curlHandler));
-
+            throw new InvalidSendExcpetion(curl_error($this->curlHandler));
 
         return (new Response($result));
     }
