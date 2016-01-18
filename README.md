@@ -1,7 +1,8 @@
-# Yandex Direct Api
+# Bitrix module: Yandex Direct Api
 ---
 
 ## Описание
+Модуль позволяет использовать API яндекс директа, в том числе и финансовые операции.
 
 ## Установка
 - Скопировать репозиторий в папку `/bitrix/modules/` или `/local/modules/`.
