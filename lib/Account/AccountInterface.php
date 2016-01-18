@@ -17,7 +17,7 @@ interface AccountInterface
     /**
      * @return mixed
      */
-    public function getToken();
+    public function getToken($checkActual = false);
 
     /**
      * @return mixed

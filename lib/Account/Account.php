@@ -102,8 +102,10 @@ class Account implements AccountInterface, \ArrayAccess
 
     public function getToken($checkActual = false)
     {
-        // TODO: Сделать проверку на актуальность токена
-        return $this->fields['ACCESS_TOKEN'];
+        if ($this->fields['TOKEN_FINAL_DATE'] > new DateTime())
+            return $this->fields['ACCESS_TOKEN'];
+
+        return null;
     }
 
     public function getMasterToken()
