@@ -9,8 +9,6 @@ use Jwt\Algorithm\HS256Algorithm;
 
 class AccountsTable extends Entity\Datamanager
 {
-    const SECRET_KEY = 'some-secret-key-for-application';
-
     public static function getTableName()
     {
         return 'shantilab_yandexdirect_accounts';
@@ -53,7 +51,7 @@ class AccountsTable extends Entity\Datamanager
                 'save_data_modification' => function () {
                     return [
                         function ($value) {
-                            $secretKey = self::SECRET_KEY;
+                            $secretKey = (new Config())->getConfig('secretKey');
                             $value = Jwt::encode($value, $alg = new HS256Algorithm($secretKey));
                             return $value;
                         }
@@ -62,7 +60,7 @@ class AccountsTable extends Entity\Datamanager
                 'fetch_data_modification' => function () {
                     return [
                         function ($value) {
-                            $secretKey = self::SECRET_KEY;
+                            $secretKey = (new Config())->getConfig('secretKey');
                             $decoded = Jwt::decode($value, ['algorithm' =>  new HS256Algorithm($secretKey)]);
                             return $decoded['data'];
                         }
@@ -84,7 +82,7 @@ class AccountsTable extends Entity\Datamanager
                 'save_data_modification' => function () {
                     return [
                         function ($value) {
-                            $secretKey = self::SECRET_KEY;
+                            $secretKey = (new Config())->getConfig('secretKey');
                             $value = Jwt::encode($value, $alg = new HS256Algorithm($secretKey));
                             return $value;
                         }
@@ -95,7 +93,7 @@ class AccountsTable extends Entity\Datamanager
                         function ($value) {
                             if (!$value) return;
 
-                            $secretKey = self::SECRET_KEY;
+                            $secretKey = (new Config())->getConfig('secretKey');
                             $decoded = Jwt::decode($value, ['algorithm' =>  new HS256Algorithm($secretKey)]);
                             return $decoded['data'];
                         }
