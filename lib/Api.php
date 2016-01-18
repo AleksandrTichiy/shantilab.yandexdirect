@@ -52,8 +52,11 @@ class Api
         ];
 
         if ($this->isFinancialOperation($method)){
-            $params['finance_token']  = $this->account->getFinancialToken($method);
-            $params['operation_num']  = $this->account->getFinancialNum() + 1;
+            $params['finance_token']  = $this->account->getFinanceToken($method);
+            $params['operation_num']  = $this->account->getFinanceNum() + 1;
+        }else{
+            $params['application_id'] = $this->config['applicationID'];
+            $params['token'] = $this->account->getToken();
         }
 
         $params =  Json::encode($params);

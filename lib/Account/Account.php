@@ -110,7 +110,7 @@ class Account implements AccountInterface, \ArrayAccess
         return $this->fields['MASTER_TOKEN'];
     }
 
-    public function getFinancialToken($method)
+    public function getFinanceToken($method)
     {
         $login = toLower(str_replace('.', '-', $this->getLogin()));
         $masterToken = $this->getMasterToken();
@@ -133,7 +133,7 @@ class Account implements AccountInterface, \ArrayAccess
         ]);
     }
 
-    public function getFinancialNum()
+    public function getFinancelNum()
     {
         return intval($this->fields['FINANCE_NUM']);
     }

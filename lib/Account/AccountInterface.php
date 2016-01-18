@@ -32,10 +32,10 @@ interface AccountInterface
     /**
      * @return mixed
      */
-    public function getFinancialToken($method);
+    public function getFinanceToken($method);
 
     /**
      * @return mixed
      */
-    public function getFinancialNum();
+    public function getFinancelNum();
 }
