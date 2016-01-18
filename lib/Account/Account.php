@@ -100,8 +100,9 @@ class Account implements AccountInterface, \ArrayAccess
         return $this->fields;
     }
 
-    public function getToken()
+    public function getToken($checkActual = false)
     {
+        // TODO: Сделать проверку на актуальность токена
         return $this->fields['ACCESS_TOKEN'];
     }
 
